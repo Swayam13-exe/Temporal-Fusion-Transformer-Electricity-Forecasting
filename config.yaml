@@ -1,0 +1,35 @@
+data:
+  raw_path: "data/raw/LD2011_2014.txt"
+  processed_dir: "data/processed"
+  lookback_hours: 168
+  horizon_hours: 24
+
+split:
+  train_end: "2014-06-30 23:00:00"
+  val_end: "2014-09-30 23:00:00"
+
+lightgbm:
+  num_leaves: 31              
+  min_data_in_leaf: 50        
+  lambda_l1: 0.1
+  lambda_l2: 1.0
+  learning_rate: 0.03
+  feature_fraction: 0.8
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  num_boost_round: 2000       
+  early_stopping_rounds: 50
+
+tft:
+  hidden_size: 32
+  attention_head_size: 4
+  dropout: 0.1
+  hidden_continuous_size: 16
+  learning_rate: 0.001
+  max_epochs: 30
+  batch_size: 128
+  quantiles: [0.1, 0.25, 0.5, 0.75, 0.9]
+
+deployment:
+  fastapi_port: 8000
+  streamlit_port: 8501
