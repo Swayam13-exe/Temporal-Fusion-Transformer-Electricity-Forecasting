@@ -74,7 +74,7 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 - [x] Data pipeline (load, resample to hourly, client filtering, chronological split)
 - [x] Metrics module (point + probabilistic)
 - [x] Seasonal naive + LightGBM direct multi-horizon baselines (residual-based, regularized, early-stopped)
-- [ ] LSTM seq2seq baseline
+- [x] LSTM seq2seq baseline
 - [ ] TFT training pipeline
 - [ ] Attention-weight interpretability notebook
 - [ ] Forecast-drift monitoring
@@ -83,6 +83,34 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 - [ ] CI (GitHub Actions)
 
 ## Results
+
+### Baselines & LSTM (test set, 24h horizon)
+
+| Model | MAE | RMSE | SMAPE |
+|---|---|---|---|
+| Seasonal naive | 247.59 | 1658.38 | 13.74 |
+| LightGBM (residual, regularized) | 225.66 | 2475.55 | 14.04 |
+| **LSTM seq2seq (no attention)** | **163.26** | **1332.62** | **9.17** |
+
+**Finding:** seasonal naive is a strong baseline given this dataset's extreme
+weekly periodicity. A residual-based LightGBM improves typical-case accuracy
+over naive but is less robust to outliers (worse RMSE), a trade-off that
+persisted even after regularization and early stopping -- suggesting a
+genuine modeling gap (missing holiday/anomaly signal, 314 clients with
+heterogeneous scale pooled into one model) rather than a tuning artifact.
+
+The LSTM seq2seq baseline -- with per-client z-score normalization to
+address that same heterogeneous-scale issue, plus a learned client embedding
+-- beats both baselines on every metric, including RMSE. This is the first
+model to do so, and sets a meaningful bar for the TFT: can attention-based
+architecture improve further still, and can its native quantile output
+deliver well-calibrated uncertainty bands on top of this level of point
+accuracy?
+
+### TFT
+
+_(populated once trained -- MAE/RMSE/SMAPE per horizon step, pinball loss,
+p10-p90 coverage, and full model comparison table will go here)_
 
 ### Baselines (test set, 24h horizon)
 
