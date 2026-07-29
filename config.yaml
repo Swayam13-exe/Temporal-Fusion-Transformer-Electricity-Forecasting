@@ -21,7 +21,7 @@ lightgbm:
   early_stopping_rounds: 50
 
 lstm:
-  window_stride: 6  # hours between window start points; 1 = ~6.8M windows (too much RAM), 6 is a safe default
+  window_stride: 6
   hidden_size: 64
   num_layers: 2
   dropout: 0.2
@@ -40,6 +40,11 @@ tft:
   max_epochs: 30
   batch_size: 128
   quantiles: [0.1, 0.25, 0.5, 0.75, 0.9]
+  num_workers: 0
+  limit_train_batches: 0.15
+  limit_val_batches: 0.3
+  early_stopping_patience: 5
+  gradient_clip_val: 0.1
 
 deployment:
   fastapi_port: 8000
