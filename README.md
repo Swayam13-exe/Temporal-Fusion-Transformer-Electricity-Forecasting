@@ -75,7 +75,7 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 - [x] Metrics module (point + probabilistic)
 - [x] Seasonal naive + LightGBM direct multi-horizon baselines (residual-based, regularized, early-stopped)
 - [x] LSTM seq2seq baseline
-- [ ] TFT training pipeline
+- [x] TFT training pipeline
 - [ ] Attention-weight interpretability notebook
 - [ ] Forecast-drift monitoring
 - [ ] FastAPI serving + Docker
@@ -84,30 +84,36 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 
 ## Results
 
-### Baselines & LSTM (test set, 24h horizon)
+### Full model comparison (test set, 24h horizon)
 
 | Model | MAE | RMSE | SMAPE |
 |---|---|---|---|
 | Seasonal naive | 247.59 | 1658.38 | 13.74 |
 | LightGBM (residual, regularized) | 225.66 | 2475.55 | 14.04 |
-| **LSTM seq2seq (no attention)** | **163.26** | **1332.62** | **9.17** |
+| LSTM seq2seq (no attention) | 163.26 | 1332.62 | 9.17 |
+| **Temporal Fusion Transformer** | **153.85** | **1302.58** | **8.26** |
 
-**Finding:** seasonal naive is a strong baseline given this dataset's extreme
-weekly periodicity. A residual-based LightGBM improves typical-case accuracy
-over naive but is less robust to outliers (worse RMSE), a trade-off that
-persisted even after regularization and early stopping -- suggesting a
-genuine modeling gap (missing holiday/anomaly signal, 314 clients with
-heterogeneous scale pooled into one model) rather than a tuning artifact.
+TFT p10-p90 empirical coverage: **0.817** (target ~0.80 for a well-calibrated
+interval) -- confirms the quantile forecasts are genuinely trustworthy, not
+just point estimates with decorative bounds.
 
-The LSTM seq2seq baseline -- with per-client z-score normalization to
-address that same heterogeneous-scale issue, plus a learned client embedding
--- beats both baselines on every metric, including RMSE. This is the first
-model to do so, and sets a meaningful bar for the TFT: can attention-based
-architecture improve further still, and can its native quantile output
-deliver well-calibrated uncertainty bands on top of this level of point
-accuracy?
+**Finding:** seasonal naive is a strong baseline given this dataset's
+extreme weekly periodicity. A residual-based LightGBM improves typical-case
+accuracy but trades away robustness to outliers (worse RMSE) even after
+regularization. An LSTM with per-client normalization fixes that
+heterogeneous-scale problem and beats both baselines on every metric. The
+TFT improves further still on every metric over the LSTM, while also
+producing calibrated uncertainty bands neither baseline nor the LSTM can
+offer -- confirming that the added architectural complexity (variable
+selection networks, gated residual networks, interpretable attention,
+native quantile loss) earns its keep on this task, both for point accuracy
+and for genuinely useful probabilistic forecasts.
 
-### TFT
+## Author
 
-_(populated once trained -- MAE/RMSE/SMAPE per horizon step, pinball loss,
-p10-p90 coverage, and full model comparison table will go here)_
+**Swayam Goswami** — Computer Engineering student, ML Engineer.
+[GitHub](https://github.com/Swayam13-exe) · [LinkedIn](https://www.linkedin.com/in/swayam-goswami-3b4106333)
+
+## License
+
+This project is licensed under the MIT License -- see [LICENSE](LICENSE) for details.
