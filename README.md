@@ -76,7 +76,7 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 - [x] Seasonal naive + LightGBM direct multi-horizon baselines (residual-based, regularized, early-stopped)
 - [x] LSTM seq2seq baseline
 - [x] TFT training pipeline
-- [ ] Attention-weight interpretability notebook
+- [x] Attention-weight interpretability notebook
 - [ ] Forecast-drift monitoring
 - [ ] FastAPI serving + Docker
 - [ ] Streamlit fan-chart demo
@@ -92,6 +92,19 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 | LightGBM (residual, regularized) | 225.66 | 2475.55 | 14.04 |
 | LSTM seq2seq (no attention) | 163.26 | 1332.62 | 9.17 |
 | **Temporal Fusion Transformer** | **153.85** | **1302.58** | **8.26** |
+
+### Interpretability
+
+TFT's native attention mechanism independently rediscovered this dataset's
+daily periodicity: attention weights peak sharply at ~24-hour intervals in
+the lookback window (strongest at "same hour yesterday" and "right now"),
+with no explicit seasonal feature required. Variable importance further
+confirms `hour` as the single most influential input, and `client_id` as
+the dominant static signal (~77% of static importance) -- corroborating,
+independently, the same design decisions that fixed the LightGBM and LSTM
+baselines earlier in this project (categorical client encoding, per-client
+specialization). See `notebooks/attention_interpretability.py` for the full
+analysis and plots.
 
 TFT p10-p90 empirical coverage: **0.817** (target ~0.80 for a well-calibrated
 interval) -- confirms the quantile forecasts are genuinely trustworthy, not
