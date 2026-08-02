@@ -77,7 +77,7 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 - [x] LSTM seq2seq baseline
 - [x] TFT training pipeline
 - [x] Attention-weight interpretability notebook
-- [ ] Forecast-drift monitoring
+- [x] Forecast-drift monitoring
 - [ ] FastAPI serving + Docker
 - [ ] Streamlit fan-chart demo
 - [ ] CI (GitHub Actions)
@@ -92,19 +92,6 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 | LightGBM (residual, regularized) | 225.66 | 2475.55 | 14.04 |
 | LSTM seq2seq (no attention) | 163.26 | 1332.62 | 9.17 |
 | **Temporal Fusion Transformer** | **153.85** | **1302.58** | **8.26** |
-
-### Interpretability
-
-TFT's native attention mechanism independently rediscovered this dataset's
-daily periodicity: attention weights peak sharply at ~24-hour intervals in
-the lookback window (strongest at "same hour yesterday" and "right now"),
-with no explicit seasonal feature required. Variable importance further
-confirms `hour` as the single most influential input, and `client_id` as
-the dominant static signal (~77% of static importance) -- corroborating,
-independently, the same design decisions that fixed the LightGBM and LSTM
-baselines earlier in this project (categorical client encoding, per-client
-specialization). See `notebooks/attention_interpretability.py` for the full
-analysis and plots.
 
 TFT p10-p90 empirical coverage: **0.817** (target ~0.80 for a well-calibrated
 interval) -- confirms the quantile forecasts are genuinely trustworthy, not
@@ -121,6 +108,42 @@ offer -- confirming that the added architectural complexity (variable
 selection networks, gated residual networks, interpretable attention,
 native quantile loss) earns its keep on this task, both for point accuracy
 and for genuinely useful probabilistic forecasts.
+
+### Interpretability
+
+TFT's native attention mechanism independently rediscovered this dataset's
+daily periodicity: attention weights peak sharply at ~24-hour intervals in
+the lookback window (strongest at "same hour yesterday" and "right now"),
+with no explicit seasonal feature required. Variable importance further
+confirms `hour` as the single most influential input, and `client_id` as
+the dominant static signal (~77% of static importance) -- corroborating,
+independently, the same design decisions that fixed the LightGBM and LSTM
+baselines earlier in this project (categorical client encoding, per-client
+specialization). See `notebooks/attention_interpretability.py` for the full
+analysis and plots.
+
+### Drift Monitoring
+
+Weekly rolling evaluation across the test period (Oct-Dec 2014) shows the
+model performing consistently well through most weeks (MAE well below the
+reference baseline in weeks 5-11), but both point accuracy and calibration
+degrade sharply in the final two weeks -- MAE rises from ~115 kWh to 269 kWh
+(crossing the drift threshold), and p10-p90 coverage drops from ~0.80-0.85
+to ~0.73-0.74.
+
+These final two weeks fall on Christmas and New Year's. This corroborates a
+hypothesis raised earlier in the project when diagnosing LightGBM's RMSE
+gap against seasonal naive: none of the calendar features used anywhere in
+this project (`hour`, `day_of_week`, `month`, `is_weekend`) include an
+explicit holiday signal, so all three models are structurally blind to
+holiday-driven demand shifts. TFT's attention mechanism independently
+learned pure weekly periodicity (see Interpretability, above) with nothing
+holiday-aware to fall back on -- so it's unsurprising this is exactly where
+it struggles most. A natural next step (noted for future work rather than
+implemented here) would be adding an `is_holiday` feature across all models.
+
+See `src/drift_monitoring.py` and `reports/drift_weekly_report.csv` for the
+full weekly breakdown.
 
 ## Author
 
