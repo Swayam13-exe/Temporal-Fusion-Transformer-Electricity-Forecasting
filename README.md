@@ -78,7 +78,7 @@ python src/data_pipeline.py --raw_path data/raw/LD2011_2014.txt
 - [x] TFT training pipeline
 - [x] Attention-weight interpretability notebook
 - [x] Forecast-drift monitoring
-- [ ] FastAPI serving + Docker
+- [x] FastAPI serving + Docker
 - [ ] Streamlit fan-chart demo
 - [ ] CI (GitHub Actions)
 
@@ -144,6 +144,29 @@ implemented here) would be adding an `is_holiday` feature across all models.
 
 See `src/drift_monitoring.py` and `reports/drift_weekly_report.csv` for the
 full weekly breakdown.
+
+### Deployment
+
+The trained model is served via a FastAPI app (`src/api.py`), containerized
+with Docker. Since the full 314-client dataset isn't committed to the repo,
+the API serves forecasts for a small bundled sample of 8 representative
+clients (`demo/sample_data.parquet`, exported via
+`src/export_serving_artifacts.py`) rather than requiring the full raw
+dataset to run.
+
+Serving a GPU-trained checkpoint from a CPU-only container required
+explicitly rebuilding the model from its raw state dict rather than using
+the framework's default checkpoint loader, since cached device references
+(from `torchmetrics` internals, not the model weights themselves) don't
+survive a naive `map_location="cpu"` load.
+
+```bash
+python -m src.export_serving_artifacts --config config.yaml  # one-time
+docker build -t tft-forecast-api .
+docker run -p 8000:8000 tft-forecast-api
+```
+
+Interactive API docs available at `http://localhost:8000/docs` once running.
 
 ## Author
 
