@@ -73,8 +73,29 @@ def load_artifacts():
     if not ckpts:
         raise RuntimeError("No TFT checkpoint found in models/ -- train the model first.")
     checkpoint_path = str(max(ckpts, key=lambda p: p.stat().st_mtime))
-    model = TemporalFusionTransformer.load_from_checkpoint(checkpoint_path)
+
+    raw_ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    state_dict = {
+        k: (v.cpu() if isinstance(v, torch.Tensor) else v)
+        for k, v in raw_ckpt["state_dict"].items()
+    }
+    hparams = raw_ckpt.get("hyper_parameters", {})
+
+    model = TemporalFusionTransformer(**hparams)
+    model.load_state_dict(state_dict)
     model.eval()
+
+    # torchmetrics.Metric objects (the loss, and anything inside
+    # logging_metrics) cache a private _device attribute set at
+    # instantiation time -- a plain Python attribute, NOT a tensor, so it
+    # survives state_dict remapping untouched and still points at cuda:0
+    # from GPU training. This generically resets it on every submodule that
+    # has one, rather than guessing which specific metric classes need
+    # reconstructing.
+    for module in model.modules():
+        if hasattr(module, "_device"):
+            module._device = torch.device("cpu")
+
     _state["model"] = model
     print(f"Loaded checkpoint: {checkpoint_path}")
 
