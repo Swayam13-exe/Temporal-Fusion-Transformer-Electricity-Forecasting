@@ -327,7 +327,7 @@ pytest tests/ -v
 - [x] FastAPI serving + Docker
 - [x] Streamlit demo
 - [x] CI (GitHub Actions)
-- [-] Public cloud deployment (optional — works fully locally; see Deployment)
+- [ ] Public cloud deployment (optional — works fully locally; see Deployment)
 
 ---
 
