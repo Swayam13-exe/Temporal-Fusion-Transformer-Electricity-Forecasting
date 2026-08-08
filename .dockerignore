@@ -1,0 +1,16 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.gitignore
+data/raw/
+data/processed/
+lightning_logs/
+reports/
+notebooks/
+tests/
+.ipynb_checkpoints/
+*.log
+.DS_Store
