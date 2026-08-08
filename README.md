@@ -1,3 +1,5 @@
+<div align="center">
+
 # Multi-Horizon Electricity Load Forecasting with Temporal Fusion Transformer
 
 Probabilistic 24-hour electricity load forecasting for 314 clients, comparing a
@@ -7,8 +9,12 @@ a deployed serving layer (FastAPI, Docker, Streamlit).
 
 ![Tests](https://github.com/Swayam13-exe/Temporal-Fusion-Transformer-Electricity-Forecasting/actions/workflows/tests.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![Dataset](https://img.shields.io/badge/dataset-UCI%20Electricity%20Load%20Diagrams-blue)](https://archive.ics.uci.edu/dataset/321/electricityloaddiagrams20112014)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+
+</div>
 
 ---
 
