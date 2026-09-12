@@ -50,3 +50,6 @@ tft:
 deployment:
   fastapi_port: 8000
   streamlit_port: 8501
+
+huggingface:
+  repo_id: "Swayam14/tft-electricity-forecasting"
