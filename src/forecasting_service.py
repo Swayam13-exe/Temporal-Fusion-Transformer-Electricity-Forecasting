@@ -37,24 +37,28 @@ def _generate_future_calendar(last_hour: int, last_dow: int, last_month: int, ho
 
 
 def load_serving_artifacts(config_path: str = "config.yaml") -> dict:
-    """Loads everything needed to serve forecasts: config, the training
-    dataset schema (for reconstructing compatible inference inputs), the
-    trained model, and the small demo client sample."""
     with open(config_path) as f:
         cfg = yaml.safe_load(f)
 
+    Path("models").mkdir(exist_ok=True)
     schema_path = Path("models/training_dataset.pkl")
-    if not schema_path.exists():
-        raise RuntimeError(
-            "models/training_dataset.pkl not found -- run "
-            "`python -m src.export_serving_artifacts` first."
-        )
-    training_schema = torch.load(schema_path, weights_only=False)
-
     ckpts = list(Path("models").glob("tft_best*.ckpt"))
-    if not ckpts:
-        raise RuntimeError("No TFT checkpoint found in models/ -- train the model first.")
-    checkpoint_path = str(max(ckpts, key=lambda p: p.stat().st_mtime))
+
+    if not schema_path.exists() or not ckpts:
+        repo_id = cfg.get("huggingface", {}).get("repo_id")
+        if not repo_id:
+            raise RuntimeError(
+                "models/training_dataset.pkl and/or checkpoint not found locally, "
+                "and no huggingface.repo_id set in config.yaml to download them from."
+            )
+        from huggingface_hub import hf_hub_download
+        print(f"Local model artifacts not found -- downloading from Hugging Face Hub: {repo_id}")
+        schema_path = Path(hf_hub_download(repo_id=repo_id, filename="training_dataset.pkl"))
+        checkpoint_path = hf_hub_download(repo_id=repo_id, filename="tft_best.ckpt")
+    else:
+        checkpoint_path = str(max(ckpts, key=lambda p: p.stat().st_mtime))
+
+    training_schema = torch.load(schema_path, weights_only=False)
 
     raw_ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     state_dict = {
